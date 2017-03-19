@@ -6,9 +6,12 @@
     "pouchdb": "6.1.2",
     "react": "^15.4.2",
     "react-bootstrap": "0.30.8",
-    "react-dom": "^15.4.2"
+    "react-dom": "^15.4.2",
+    "react-file-reader-input": "1.1.0"
   },
   "devDependencies": {
+    "babel-eslint": "^7.1.1",
+    "babel-plugin-transform-flow-strip-types": "*",
     "flow-bin": "*",
     "react-scripts": "0.9.5"
   },
