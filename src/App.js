@@ -41,6 +41,19 @@ ErrorMessage.propTypes = {
 };
 
 /**
+ * Helper component that conditionally displays content in the application based on the application's state.
+ */
+const Content = ({fileUploaded}) => {
+  if(!fileUploaded) {
+    return <div />;
+  }
+};
+
+Content.propTypes = {
+  fileUploaded: React.PropTypes.bool.isRequired
+};
+
+/**
  * Helper component that decides what to render at the top of the application depending on what stage of setup we're on,
  * the state of any errors, etc.
  */
@@ -114,7 +127,7 @@ class App extends React.Component {
           <div className='top'>
             <TopInfo
               error={this.state.error}
-              fileUploaded={this.state.fileUploaded}
+              fileUploaded={/* this.state.fileUploaded */true} // temporarily disabled so that we can generate a starting file
               onFileSelect={this.handleFileSelect}
             />
           </div>
