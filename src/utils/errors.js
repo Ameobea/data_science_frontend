@@ -12,7 +12,7 @@ const CritError = ({additionalError}) => {
       </div>
     );
   } else {
-    extra = <div />
+    extra = <div />;
   }
 
   return (
@@ -28,6 +28,10 @@ const CritError = ({additionalError}) => {
 
 CritError.propTypes = {
   additionalError: React.PropTypes.string,
+};
+
+CritError.defaultProps = {
+  additionalError: '',
 };
 
 export default {
