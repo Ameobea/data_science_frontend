@@ -15,14 +15,14 @@ type VUObservation = {
   location: string,
   timestamp: number, // unix timestamp that can be parsed into a date using `new Date(data.lastModified)`
   waterTemp: ?number, // water temperature in Celsius
-  mmHG: ?number,
+  mmHg: ?number,
   DOPercent: ?number,
   DOMgL: ?number,
   CUsCm: ?number,
   eColi1: ?number,
   turbidity: ?number,
   pH: ?number,
-  CLConc: ?number,
+  ClConc: ?number,
   NO3Conc: ?number,
   SO4Conc: ?number,
   TSSSampleMass1: ?number,

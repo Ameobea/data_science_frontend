@@ -31,5 +31,5 @@ CritError.propTypes = {
 };
 
 export default {
-  critError: critError,
+  CritError: CritError,
 };

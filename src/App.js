@@ -7,6 +7,7 @@ const PouchDB = require('pouchdb');
 
 import './App.css';
 import UploadFilePrompt from './components/UploadFilePrompt';
+import WaterDataInput from './components/WaterDataInput';
 import loadDb from './utils/loadDb';
 
 var db = new PouchDB('dbname');
@@ -27,7 +28,7 @@ const ErrorMessage = ({msg}) => {
   }
 
   return (
-    <Alert bsStyle="danger">
+    <Alert bsStyle='danger'>
       {content}
     </Alert>
   );
@@ -44,7 +45,7 @@ ErrorMessage.propTypes = {
  * Helper component that decides what to render at the top of the application depending on what stage of setup we're on,
  * the state of any errors, etc.
  */
-const TopInfo = ({error, fileUploaded, onFileSelect}) => {
+const TopInfo = ({error, fileUploaded, onFileSelect, successStatus}) => {
   if(!fileUploaded && error !== null) {
     return (
       <div>
@@ -52,8 +53,10 @@ const TopInfo = ({error, fileUploaded, onFileSelect}) => {
         <UploadFilePrompt onSelectFile={onFileSelect} />
       </div>
     );
-  } else if(!fileUploaded) {
-    return <UploadFilePrompt onSelectFile={onFileSelect} />;
+  //} //else if(!fileUploaded) {
+   // return <UploadFilePrompt onSelectFile={onFileSelect} />;
+  } else if(successStatus) {
+    return <Alert bsStyle='success'>{successStatus}</Alert>;
   } else {
     return <div />;
   }
@@ -74,6 +77,8 @@ class App extends React.Component {
     };
 
     this.handleFileSelect = this.handleFileSelect.bind(this);
+    this.handleError = this.handleError.bind(this);
+    this.setSuccessStatus = this.setSuccessStatus.bind(this);
   }
 
   /**
@@ -103,6 +108,15 @@ class App extends React.Component {
     r.readAsText(results[0][1]);
   }
 
+  handleError(err) {
+    this.setState({error: err});
+  }
+
+  setSuccessStatus(status) {
+    console.log(status);
+    this.setState({error: null, successStatus: status});
+  }
+
   render() {
     return (
       <div className='App'>
@@ -116,9 +130,12 @@ class App extends React.Component {
               error={this.state.error}
               fileUploaded={this.state.fileUploaded}
               onFileSelect={this.handleFileSelect}
+              successStatus={this.state.successStatus}
             />
           </div>
         </div>
+
+        <WaterDataInput db={db} onInputSuccess={this.setSuccessStatus} onError={this.handleError} />
       </div>
     );
   }
