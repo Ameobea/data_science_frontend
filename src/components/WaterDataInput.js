@@ -1,7 +1,8 @@
 //! Form that allows the input of water quality data
 
 import React from 'react';
-import { Button, FormGroup, ControlLabel, FormControl, HelpBlock } from 'react-bootstrap';
+import { Button, Col, Form, FormGroup, ControlLabel, FormControl, HelpBlock } from 'react-bootstrap';
+const DatePicker = require("react-bootstrap-date-picker");
 
 import { addWaterQualityObservation } from '../utils/queryDb';
 
@@ -11,15 +12,26 @@ class WaterDataInput extends React.Component {
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.FieldGroup = this.FieldGroup.bind(this);
+    this.handleTimestampChange = this.handleTimestampChange.bind(this);
+
+    this.state = {
+      timestamp: new Date().toISOString(),
+    }
   }
 
   FieldGroup({ id, label, help, ...props }) {
     return (
-      <FormGroup controlId={id}>
-        <ControlLabel>{label}</ControlLabel>
-        <FormControl {...props} onChange={this.handleInputChange} />
-        {help && <HelpBlock>{help}</HelpBlock>}
-      </FormGroup>
+      <Col xs={12} md={6}>
+        <FormGroup controlId={id}>
+          <Col md={5}>
+            <ControlLabel>{label}</ControlLabel>
+          </Col>
+          <Col md={7}>
+            <FormControl bsSize='small' style={{width: '100%'}} {...props} onChange={this.handleInputChange} />
+            {help && <HelpBlock>{help}</HelpBlock>}
+          </Col>
+        </FormGroup>
+      </Col>
     );
   }
 
@@ -33,6 +45,12 @@ class WaterDataInput extends React.Component {
     });
   }
 
+  handleTimestampChange(value, formattedValue) {
+    this.setState({
+      timestamp: value, // ISO String, ex: "2016-11-19T12:00:00.000Z"
+    });
+  }
+
   handleSubmit(e) {
     e.preventDefault();
     addWaterQualityObservation(this.props.db, this.state)
@@ -41,27 +59,35 @@ class WaterDataInput extends React.Component {
   }
 
   render() {
+    console.log(this.props.db);
     return (
-      <div style={{width: '50%', maxWidth: '350px', textAlign: 'left', margin: '0 auto'}}>
-        <form>
+      <div style={{width: '80%', textAlign: 'left', margin: '0 auto'}}>
+        <Form horizontal>
           <this.FieldGroup
             id='location'
             type='text'
             label='Location'
-            placeholder='Location where this data was recorded'
+            placeholder='TODO: Replace with Dropdown'
           />
 
-          <this.FieldGroup
-            id='timestamp'
-            type='text'
-            label='Date Recorded'
-            placeholder='To be replaced by timestamp picker'
-          />
+          <Col xs={12} md={6}>
+            <FormGroup controlId={'date-recorded'}>
+              <Col md={5}>
+                <ControlLabel>{'Date Recorded'}</ControlLabel>
+              </Col>
+              <Col md={7}>
+                <DatePicker
+                  onChange={this.handleTimestampChange}
+                  value={this.state.timestamp}
+                />
+              </Col>
+            </FormGroup>
+          </Col>
 
           <this.FieldGroup
             id='waterTemp'
             type='number'
-            label='Water Temperature'
+            label='Water Temp'
           />
 
           <this.FieldGroup
@@ -139,7 +165,7 @@ class WaterDataInput extends React.Component {
           <Button onClick={this.handleSubmit} type="submit">
             {'Submit'}
           </Button>
-        </form>
+        </Form>
       </div>
     );
   }

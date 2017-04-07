@@ -9,37 +9,14 @@ import './App.css';
 import UploadFilePrompt from './components/UploadFilePrompt';
 import WaterDataInput from './components/WaterDataInput';
 import loadDb from './utils/loadDb';
+import { ErrorMessage } from './utils/errors';
+import WaterQualityVisualization from './components/WaterQualityVisualization';
+import { getAllWaterQualityObservations } from './utils/queryDb';
 
 var db = new PouchDB('dbname');
-
-/**
- * Displays a big red warning at the top of the application if there is an error to report.  Renders nothing if there is no error.
- */
-const ErrorMessage = ({msg}) => {
-  if(msg === null) {
-    return <div />;
-  }
-
-  let content;
-  if(_.isString(msg)) {
-    content = (<p>{msg}</p>);
-  } else {
-    content = msg;
-  }
-
-  return (
-    <Alert bsStyle='danger'>
-      {content}
-    </Alert>
-  );
-};
-
-ErrorMessage.propTypes = {
-  msg: React.PropTypes.oneOfType([
-    React.PropTypes.string,
-    React.PropTypes.node,
-  ]),
-};
+db.destroy().then(() => {
+  db = new PouchDB('dbname');
+});
 
 /**
  * Helper component that conditionally displays content in the application based on the application's state.
@@ -59,26 +36,32 @@ Content.propTypes = {
  * the state of any errors, etc.
  */
 const TopInfo = ({error, fileUploaded, onFileSelect, successStatus}) => {
-  if(!fileUploaded && error !== null) {
-    return (
-      <div>
-        <ErrorMessage msg={error} />
-        <UploadFilePrompt onSelectFile={onFileSelect} />
-      </div>
-    );
-  //} //else if(!fileUploaded) {
-   // return <UploadFilePrompt onSelectFile={onFileSelect} />;
-  } else if(successStatus) {
-    return <Alert bsStyle='success'>{successStatus}</Alert>;
+  const fileUploadComp = fileUploaded ? <div /> : <UploadFilePrompt onSelectFile={onFileSelect} />;
+  let errorComp;
+  if(React.isValidElement(error)) {
+    errorComp = error;
   } else {
-    return <div />;
+    if(error && !_.isString(error)) {
+      error = JSON.stringify(error);
+    }
+    errorComp = error ? <ErrorMessage msg={error} /> : <div />;
   }
+  const successComp = successStatus ? <Alert bsStyle='success'>{successStatus}</Alert> : <div />;
+
+  return (
+    <div>
+      {errorComp}
+      {successComp}
+      {fileUploadComp}
+    </div>
+  );
 };
 
 TopInfo.propTypes = {
-  error: React.PropTypes.string,
+  error: React.PropTypes.any,
   fileUploaded: React.PropTypes.bool.isRequired,
   onFileSelect: React.PropTypes.func.isRequired,
+  successStatus: React.PropTypes.string,
 };
 
 class App extends React.Component {
@@ -87,11 +70,12 @@ class App extends React.Component {
     this.state = {
       fileUploaded: false,
       error: null,
+      successStatus: null,
     };
 
     this.handleFileSelect = this.handleFileSelect.bind(this);
     this.handleError = this.handleError.bind(this);
-    this.setSuccessStatus = this.setSuccessStatus.bind(this);
+    this.handleInputSuccess = this.handleInputSuccess.bind(this);
   }
 
   /**
@@ -105,6 +89,7 @@ class App extends React.Component {
       let parsed;
 
       try {
+        console.log(contents);
         parsed = JSON.parse(contents);
       } catch(e) {
         this.setState({error: 'Unable to parse the supplied file.  Did you pick the right one?'});
@@ -112,7 +97,13 @@ class App extends React.Component {
 
       // attempt to load the PouchDB with the parsed data
       loadDb(db, parsed).then(() => {
-        this.setState({error: null, fileUploaded: true});
+        this.setState({error: null, fileUploaded: true, successStatus: 'File successfully loaded!'});
+        // pull all documents out and parse
+        getAllWaterQualityObservations(db).then(data => {
+          this.setState({data: data});
+        }).catch(err => {
+          this.setState({error: err});
+        });
       }).catch(err => {
         this.setState({error: err});
       });
@@ -122,15 +113,26 @@ class App extends React.Component {
   }
 
   handleError(err) {
-    this.setState({error: err});
+    this.setState({error: err, successStatus: null});
   }
 
-  setSuccessStatus(status) {
-    console.log(status);
-    this.setState({error: null, successStatus: status});
+  handleInputSuccess(status) {
+    getAllWaterQualityObservations(db).then(data => {
+      this.setState({data: data, error: null, successStatus: status});
+    }).catch(err => {
+      this.setState({error: err});
+    });
   }
 
   render() {
+    const content = this.state.fileUploaded
+      ? <WaterDataInput db={db} onError={this.handleError} onInputSuccess={this.handleInputSuccess} />
+      : <div />;
+
+    const viz = this.state.data
+      ? <WaterQualityVisualization data={this.state.data} />
+      : <div />;
+
     return (
       <div className='App'>
         <div className='App-header'>
@@ -141,14 +143,15 @@ class App extends React.Component {
           <div className='top'>
             <TopInfo
               error={this.state.error}
-              fileUploaded={/* this.state.fileUploaded */true} // temporarily disabled so that we can generate a starting file
+              fileUploaded={this.state.fileUploaded} // temporarily disabled so that we can generate a starting file
               onFileSelect={this.handleFileSelect}
               successStatus={this.state.successStatus}
             />
           </div>
         </div>
 
-        <WaterDataInput db={db} onInputSuccess={this.setSuccessStatus} onError={this.handleError} />
+        {content}
+        {viz}
       </div>
     );
   }

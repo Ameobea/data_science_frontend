@@ -2,7 +2,6 @@
 // @flow
 
 import React from 'react';
-const _ = require('lodash');
 
 import { CritError } from './errors';
 
@@ -49,11 +48,11 @@ type ImportedData = {
  * Given a handle to the PouchDB and an object parsed from the uploaded file, attempts to populate the database with the contained
  * data.  Returns a promise that fulfills when it completes or rejects with an error if there was an issue with the supplied data.
  */
-function loadDb(db: any, data: ImportedData): Promise<null, string> {
+function loadDb(db: any, data: ImportedData): Promise<null, any> {
   return new Promise((fulfill, reject) => {
     // make sure that the required features are included in the parsed object
-    if(!_.isString(data.lastModified) || !data.VUData || !data.gradeschoolData) {
-      reject(<CritError />);
+    if(!data.lastModified || !data.VUData || !data.gradeschoolData) {
+      return reject(<CritError additionalError='Required features not present in uploaded data' />);
     }
 
     // load all of the VU Student observations into the database
@@ -62,7 +61,7 @@ function loadDb(db: any, data: ImportedData): Promise<null, string> {
     // load all of the gradeschooler-collected data into the database
     // TODO
 
-    fulfill();
+    fulfill('Successfully loaded data from file.');
   });
 }
 
