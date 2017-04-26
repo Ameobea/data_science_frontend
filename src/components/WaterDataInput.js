@@ -59,7 +59,6 @@ class WaterDataInput extends React.Component {
   }
 
   render() {
-    console.log(this.props.db);
     return (
       <div style={{width: '80%', textAlign: 'left', margin: '0 auto'}}>
         <Form horizontal>

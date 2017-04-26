@@ -8,9 +8,9 @@ const PouchDB = require('pouchdb');
 import './App.css';
 import UploadFilePrompt from './components/UploadFilePrompt';
 import WaterDataInput from './components/WaterDataInput';
+import Visualizations from './components/Visualizations';
 import loadDb from './utils/loadDb';
 import { ErrorMessage } from './utils/errors';
-import WaterQualityVisualization from './components/WaterQualityVisualization';
 import { getAllWaterQualityObservations } from './utils/queryDb';
 
 var db = new PouchDB('dbname');
@@ -89,7 +89,6 @@ class App extends React.Component {
       let parsed;
 
       try {
-        console.log(contents);
         parsed = JSON.parse(contents);
       } catch(e) {
         this.setState({error: 'Unable to parse the supplied file.  Did you pick the right one?'});
@@ -130,7 +129,7 @@ class App extends React.Component {
       : <div />;
 
     const viz = this.state.data
-      ? <WaterQualityVisualization data={this.state.data} />
+      ? <Visualizations data={this.state.data} />
       : <div />;
 
     return (
@@ -151,6 +150,7 @@ class App extends React.Component {
         </div>
 
         {content}
+        <br />
         {viz}
       </div>
     );
