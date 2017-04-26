@@ -6,13 +6,16 @@ import React from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
 
 import LinePlot from './LinePlot';
-import RegionHeatmaps from './RegionHeatmaps';
+import IntralocationHeatmaps from './IntralocationHeatmaps';
 
 class Visualizations extends React.Component {
   constructor(props) {
     super(props);
 
     this.handleTabSelect = this.handleTabSelect.bind(this);
+    this.handleContainerRef = this.handleContainerRef.bind(this);
+    // dummy value until the dom renders
+    this.container = {clientWidth: 0};
 
     this.state = {initialScroll: 0};
   }
@@ -23,9 +26,13 @@ class Visualizations extends React.Component {
     this.setState({initialScroll: scrollTop});
   }
 
+  handleContainerRef(container) {
+    this.container = container;
+  }
+
   render() {
     return (
-      <div style={{backgroundColor: '#f2e4f3'}}>
+      <div style={{backgroundColor: '#f2e4f3'}} ref={this.handleContainerRef}>
         <Tabs
           defaultActiveKey={1}
           animation={false}
@@ -36,7 +43,11 @@ class Visualizations extends React.Component {
             <LinePlot data={this.props.data} initialScroll={this.state.initialScroll} />
           </Tab>
           <Tab eventKey={2} title='Inter-region Heatmaps'>
-            <RegionHeatmaps data={this.props.data} initialScroll={this.state.initialScroll} />
+            <IntralocationHeatmaps
+              data={this.props.data}
+              initialScroll={this.state.initialScroll}
+              containerWidth={this.container.clientWidth}
+            />
           </Tab>
         </Tabs>
       </div>

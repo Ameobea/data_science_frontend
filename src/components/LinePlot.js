@@ -4,18 +4,7 @@ const _ = require('lodash');
 import React from 'react';
 const ReactHighcharts = require('react-highcharts');
 
-/**
- * Filters all elements of a feature and replaces falsey values with `null`
- */
-function replaceNulls(data, key) {
-  return _.map(data, obs => {
-    if(obs[key]) {
-      return +obs[key];
-    } else if(obs[key] == '') {
-      return null;
-    }
-  });
-}
+import { replaceNulls } from '../utils/calc';
 
 class LinePlot extends React.Component {
   constructor(props) {

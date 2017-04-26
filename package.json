@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "highcharts-heatmap": "0.1.2",
     "lodash": "4.17.4",
     "pouchdb": "6.1.2",
     "react": "^15.4.2",
