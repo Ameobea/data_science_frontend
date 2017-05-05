@@ -1,4 +1,4 @@
-//! Renders a heatmap displaying the correlation of the features of a single region to each other
+//! Renders a heatmap displaying the correlation of different features of a single region to each other
 
 import React from 'react';
 import { Grid, Row, Col, DropdownButton, MenuItem } from 'react-bootstrap';
@@ -41,8 +41,8 @@ class IntralocationHeatmaps extends React.Component {
       });
     });
 
-    console.log(chartData);
-    console.log(labels);
+    // console.log(chartData);
+    // console.log(labels);
 
     const config = {
       chart: {

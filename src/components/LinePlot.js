@@ -20,15 +20,30 @@ class LinePlot extends React.Component {
 
   render() {
     const config = {
-      series: [
-        {
-          data: replaceNulls(this.props.data, 'waterTemp'),
-          name: 'waterTemp'
-        },
-      ],
+      // TODO: Implement multiple Y axises for each data point
+      // TODO: Actually user timestamp data for the X axis
+      series: [{
+        data: replaceNulls(this.props.data, 'waterTemp'),
+        name: 'Water Temperature',
+      }, {
+        data: replaceNulls(this.props.data, 'turbidity'),
+        name: 'Turbidity',
+      }, {
+        data: replaceNulls(this.props.data, 'pH'),
+        name: 'pH',
+      }, {
+        data: replaceNulls(this.props.data, 'ClConc'),
+        name: 'Chlorine Concentration',
+      }, {
+        data: replaceNulls(this.props.data, 'DOPercent'),
+        name: 'Dissolved Oxygen Percentage',
+      }, {
+        data: replaceNulls(this.props.data, 'DOMgL'),
+        name: 'Dissolved Oxygen Mg/L',
+      }],
       title: {
         text: 'Water Quality Feature Comparison',
-      }
+      },
     };
 
     return (

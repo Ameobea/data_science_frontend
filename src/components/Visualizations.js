@@ -7,6 +7,8 @@ import { Tabs, Tab } from 'react-bootstrap';
 
 import LinePlot from './LinePlot';
 import IntralocationHeatmaps from './IntralocationHeatmaps';
+import InterlocationHeatmaps from './InterlocationHeatmaps';
+import DataExport from './DataExport';
 
 class Visualizations extends React.Component {
   constructor(props) {
@@ -32,7 +34,7 @@ class Visualizations extends React.Component {
 
   render() {
     return (
-      <div style={{backgroundColor: '#f2e4f3'}} ref={this.handleContainerRef}>
+      <div style={{backgroundColor: '#f2e4f3', paddingBottom: '20px'}} ref={this.handleContainerRef}>
         <Tabs
           defaultActiveKey={1}
           animation={false}
@@ -48,6 +50,16 @@ class Visualizations extends React.Component {
               initialScroll={this.state.initialScroll}
               containerWidth={this.container.clientWidth}
             />
+          </Tab>
+          <Tab eventKey={3} title='Intra-region Heatmaps'>
+            <InterlocationHeatmaps
+              data={this.props.data}
+              initialScroll={this.state.initialScroll}
+              containerWidth={this.container.clientWidth}
+            />
+          </Tab>
+          <Tab eventKey={4} title='Data Export'>
+            <DataExport />
           </Tab>
         </Tabs>
       </div>

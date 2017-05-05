@@ -21,6 +21,7 @@
     "react/jsx-indent": [1, 2],
     "react/jsx-indent-props": [1, 2],
     "react/jsx-max-props-per-line": [1, {"maximum": 3, "when": "multiline"}],
+    "react/jsx-no-literals": 0,
     "react/no-multi-comp": 0,
     "react/no-set-state": 0,
     "react/require-default-props": 0,
