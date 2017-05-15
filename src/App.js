@@ -1,22 +1,14 @@
 //! Client application to interact with, analyze, and add to the project's data set
 
 import React from 'react';
-import { Alert } from 'react-bootstrap';
+import { Alert, Tabs, Tab } from 'react-bootstrap';
 const _ = require('lodash');
-const PouchDB = require('pouchdb');
+import 'whatwg-fetch';
 
 import './App.css';
-import UploadFilePrompt from './components/UploadFilePrompt';
-import WaterDataInput from './components/WaterDataInput';
-import Visualizations from './components/Visualizations';
-import loadDb from './utils/loadDb';
+import LinePlot from './components/LinePlot';
+import MiscPlots from './components/MiscPlots';
 import { ErrorMessage } from './utils/errors';
-import { getAllWaterQualityObservations } from './utils/queryDb';
-
-var db = new PouchDB('dbname');
-db.destroy().then(() => {
-  db = new PouchDB('dbname');
-});
 
 /**
  * Helper component that conditionally displays content in the application based on the application's state.
@@ -35,8 +27,7 @@ Content.propTypes = {
  * Helper component that decides what to render at the top of the application depending on what stage of setup we're on,
  * the state of any errors, etc.
  */
-const TopInfo = ({error, fileUploaded, onFileSelect, successStatus}) => {
-  const fileUploadComp = fileUploaded ? <div /> : <UploadFilePrompt onSelectFile={onFileSelect} />;
+const TopInfo = ({error, successStatus}) => {
   let errorComp;
   if(React.isValidElement(error)) {
     errorComp = error;
@@ -52,15 +43,12 @@ const TopInfo = ({error, fileUploaded, onFileSelect, successStatus}) => {
     <div>
       {errorComp}
       {successComp}
-      {fileUploadComp}
     </div>
   );
 };
 
 TopInfo.propTypes = {
   error: React.PropTypes.any,
-  fileUploaded: React.PropTypes.bool.isRequired,
-  onFileSelect: React.PropTypes.func.isRequired,
   successStatus: React.PropTypes.string,
 };
 
@@ -73,85 +61,93 @@ class App extends React.Component {
       successStatus: null,
     };
 
-    this.handleFileSelect = this.handleFileSelect.bind(this);
     this.handleError = this.handleError.bind(this);
-    this.handleInputSuccess = this.handleInputSuccess.bind(this);
+    this.handleTabSelect = this.handleTabSelect.bind(this);
+    this.handleContainerRef = this.handleContainerRef.bind(this);
+
+    // dummy value until the dom renders
+    this.container = {clientWidth: 0};
+    this.state = {initialScroll: 0};
   }
 
-  /**
-   * Read in the supplied file and attempt to load it into the database.
-   */
-  handleFileSelect(event, results) {
-    let r = new FileReader();
-    r.onload = e => {
-      // load the contents of the file into `contents`
-      let contents = e.target.result;
-      let parsed;
+  componentDidMount() {
+    // perform network request to get the JSON file containing all data
+    fetch('https://ameo.link/u/4d4.json')
+      .then(res => res.json())
+      .catch(err => {console.log('Unable to fetch data from remote URL!');})
+      .then(body => {
+        // preprocess the raw data
+        let gradeschoolData = _.map(body.gradeschoolData, datum => {
+          // console.log(datum);
 
-      try {
-        parsed = JSON.parse(contents);
-      } catch(e) {
-        this.setState({error: 'Unable to parse the supplied file.  Did you pick the right one?'});
-      }
+          const needsSplit = ['pollution floating in water', 'pollution on banks', 'pollution source', 'Invasive species?'];
+          _.each(needsSplit, attr => {
+            datum[attr] = datum[attr] ? _.map(datum[attr].split(','), val => val.trim()) : [];
+          });
 
-      // attempt to load the PouchDB with the parsed data
-      loadDb(db, parsed).then(() => {
-        this.setState({error: null, fileUploaded: true, successStatus: 'File successfully loaded!'});
-        // pull all documents out and parse
-        getAllWaterQualityObservations(db).then(data => {
-          this.setState({data: data});
-        }).catch(err => {
-          this.setState({error: err});
+          return {...datum,
+            date: new Date(datum['Student Collection Date']).getTime(),
+            'Amount of last rainfall': datum['Amount of last rainfall'] * 100,
+          };
         });
-      }).catch(err => {
-        this.setState({error: err});
-      });
-    };
 
-    r.readAsText(results[0][1]);
+        this.setState({data: _.sortBy(gradeschoolData, 'date'), successStatus: 'Successfully retrieved data!'});
+      }).catch(err => {
+        console.error('Error while processing remote data: ');
+        console.log(err);
+      });
   }
 
   handleError(err) {
     this.setState({error: err, successStatus: null});
   }
 
-  handleInputSuccess(status) {
-    getAllWaterQualityObservations(db).then(data => {
-      this.setState({data: data, error: null, successStatus: status});
-    }).catch(err => {
-      this.setState({error: err});
-    });
+  handleTabSelect(key) {
+    const doc = document.documentElement;
+    const scrollTop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+    this.setState({initialScroll: scrollTop});
+  }
+
+  handleContainerRef(container) {
+    this.container = container;
   }
 
   render() {
-    const content = this.state.fileUploaded
-      ? <WaterDataInput db={db} onError={this.handleError} onInputSuccess={this.handleInputSuccess} />
-      : <div />;
-
-    const viz = this.state.data
-      ? <Visualizations data={this.state.data} />
-      : <div />;
+    if (!this.state.data) {
+      return <b>Loading Data...</b>;
+    }
 
     return (
       <div className='App'>
         <div className='App-header'>
-          <h2>{'Data Science 101 Project GUI'}</h2>
+          <h2>Water Quality Data Analysis</h2>
         </div>
 
         <div className='content'>
           <div className='top'>
             <TopInfo
               error={this.state.error}
-              fileUploaded={this.state.fileUploaded} // temporarily disabled so that we can generate a starting file
-              onFileSelect={this.handleFileSelect}
               successStatus={this.state.successStatus}
             />
           </div>
         </div>
 
-        {content}
-        <br />
-        {viz}
+        <div style={{backgroundColor: '#f2e4f3', paddingBottom: '20px'}}>
+          <Tabs
+            defaultActiveKey={1}
+            animation={false}
+            id='visualization-tabs'
+            onSelect={this.handleTabSelect}
+          >
+            <Tab eventKey={1} title='Line Plot'>
+              <LinePlot data={this.state.data} initialScroll={this.state.initialScroll} />
+            </Tab>
+
+            <Tab eventKey={2} title='Visualizations'>
+              <MiscPlots data={this.state.data} initialScroll={this.state.initialScroll} />
+            </Tab>
+          </Tabs>
+        </div>
       </div>
     );
   }

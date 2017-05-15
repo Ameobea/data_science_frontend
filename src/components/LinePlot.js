@@ -3,14 +3,18 @@
 const _ = require('lodash');
 import React from 'react';
 const ReactHighcharts = require('react-highcharts');
-
-import { replaceNulls } from '../utils/calc';
+import { DropdownButton, MenuItem } from 'react-bootstrap';
 
 class LinePlot extends React.Component {
   constructor(props) {
     super(props);
 
+    const locations = _.map(_.uniqBy(props.data, 'Location'), 'Location');
+
     this.afterRender = this.afterRender.bind(this);
+    this.handleLocationSelect = this.handleLocationSelect.bind(this);
+
+    this.state = {selectedLocation: locations[0], locations};
   }
 
   afterRender() {
@@ -18,28 +22,40 @@ class LinePlot extends React.Component {
     window.scrollTo(0, this.props.initialScroll);
   }
 
+  handleLocationSelect(location) {
+    this.setState({selectedLocation: location});
+  }
+
   render() {
+    const data = _.filter(this.props.data, datum => datum.Location == this.state.selectedLocation);
+
     const config = {
       // TODO: Implement multiple Y axises for each data point
-      // TODO: Actually user timestamp data for the X axis
+      xAxis: {
+        type: 'datetime'
+      },
       series: [{
-        data: replaceNulls(this.props.data, 'waterTemp'),
-        name: 'Water Temperature',
+        data: _.map(data, obs => [obs.date, obs['Air temperature']]),
+        name: 'Air Temperature (C)',
       }, {
-        data: replaceNulls(this.props.data, 'turbidity'),
-        name: 'Turbidity',
+        data: _.map(data, obs => [obs.date, obs['Water temperature']]),
+        name: 'Water Temperature (C)',
       }, {
-        data: replaceNulls(this.props.data, 'pH'),
-        name: 'pH',
+        data: _.map(data, obs => [obs.date, obs['Wind speed']]),
+        name: 'Wind Speed (kph)',
+        visible: false,
       }, {
-        data: replaceNulls(this.props.data, 'ClConc'),
-        name: 'Chlorine Concentration',
+        data: _.map(data, obs => [obs.date, obs['Amount of last rainfall']]),
+        name: 'Amount of Last Rainfall (mm)',
+        visible: false,
       }, {
-        data: replaceNulls(this.props.data, 'DOPercent'),
-        name: 'Dissolved Oxygen Percentage',
+        data: _.map(data, obs => [obs.date, obs['Water flow']]),
+        name: 'Water flow (m/s)',
+        visible: false,
       }, {
-        data: replaceNulls(this.props.data, 'DOMgL'),
-        name: 'Dissolved Oxygen Mg/L',
+        data: _.map(data, obs => [obs.date, obs['Turbidity']]),
+        name: 'Turbidity (cm)',
+        visible: false,
       }],
       title: {
         text: 'Water Quality Feature Comparison',
@@ -47,7 +63,21 @@ class LinePlot extends React.Component {
     };
 
     return (
-      <ReactHighcharts config={config} callback={this.afterRender} />
+      <div>
+        <center>
+          Selected Location:{'  '}
+          <DropdownButton
+            bsStyle='default'
+            title={this.state.selectedLocation}
+            onSelect={this.handleLocationSelect}
+            id='locations-dropdown'
+          >
+            {_.map(this.state.locations, location => <MenuItem eventKey={location} key={location}>{location}</MenuItem>)}
+          </DropdownButton>
+        </center>
+        <ReactHighcharts config={config} callback={this.afterRender} isPureConfig />
+        <p>Click on the names of the features above to show/hide them</p>
+      </div>
     );
   }
 }

@@ -8,9 +8,9 @@ const _ = require('lodash');
 function replaceNulls(data, key) {
   return _.map(data, obs => {
     if(obs[key]) {
-      return +obs[key];
+      return [obs.date, +obs[key]];
     } else if(obs[key] == '') {
-      return null;
+      return [obs.date, null];
     }
   });
 }
